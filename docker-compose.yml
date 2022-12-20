@@ -73,11 +73,34 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: ignored
 
   kafka-ui:
-    image: 'obsidiandynamics/kafdrop:latest'
+    image: 'obsidiandynamics/kafdrop:${KAFKA_UI_VERSION}'
     restart: always
     ports:
-      - '9000:9000'
+      - '${KAFKA_UI_PORT}:9000'
     environment:
       KAFKA_BROKERCONNECT: kafka-service:29092
     depends_on:
       - kafka-service
+
+prometheus:
+  image: quay.io/prometheus/prometheus:${PROMETHEUS_VERSION}
+  ports:
+    - ${PROMETHEUS_PORT}:9090
+  volumes:
+    - ./prometheusconfig/prometheus.yml:/etc/prometheus/prometheus.yml
+
+grafana:
+  image: grafana/grafana:${GRAFANA_VERSION}
+  user: root
+  restart: unless-stopped
+  container_name: grafana
+  ports:
+    - ${GRAFANA_PORT}:3000
+  volumes:
+    - ./grafana-data/data:/var/lib/grafana
+    - ./grafana-data/certs:/certs
+    - ./grafana/provisioning:/etc/grafana/provisioning
+    - ./grafana/dashboards:/var/lib/grafana/dashboards
+  environment:
+    - GF_SECURITY_ADMIN_PASSWORD=admin
+
